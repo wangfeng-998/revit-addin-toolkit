@@ -1,0 +1,24 @@
+# 构建产物
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# 本地 Revit 模型与族（绝不入库）
+*.rvt
+*.rfa
+*.rte
+*.rft
+*.nwc
+*.nwd
+*.nwf
+
+# 生成的报告
+模型质检_*.csv
+模型质检_*.json
+*.log
+
+# 系统
+Thumbs.db
+desktop.ini

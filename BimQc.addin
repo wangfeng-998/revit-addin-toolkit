@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Command">
+    <Name>BIM 模型质检</Name>
+    <Assembly>BimQc.Addin.dll</Assembly>
+    <AddInId>6f0c2b9e-4a51-4d7c-9e18-2b7f0c5a9d31</AddInId>
+    <FullClassName>BimQc.QcCommand</FullClassName>
+    <VendorId>BIMQC</VendorId>
+    <VendorDescription>个人学习项目，MIT License</VendorDescription>
+  </AddIn>
+</RevitAddIns>
