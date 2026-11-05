@@ -8,12 +8,13 @@
 
 ## 环境要求
 
-| 项 | 版本 |
+| 项 | 版本（2026-11-05 本机实测） |
 | --- | --- |
-| Revit | 2023（RevitAPI 2023，理论上 2021+ 无需改代码可编译，未逐一验证） |
-| .NET | .NET Framework 4.8 |
-| 构建 | .NET SDK 6+（`dotnet build`），无需安装 Visual Studio |
-| IDE（可选） | Visual Studio 2022 / Rider，能直接打开 `.csproj` |
+| Revit | **2020（20.0.0.377）——本项目实际使用版本**；本机另装 2023.1（23.1.50.23），不用于本项目 |
+| .NET | .NET Framework 4.8.1（Release 533509），编译目标 `net48`（Revit 2020 要求 4.7.2+） |
+| 构建 | .NET SDK 10.0.203 / 10.0.402（`dotnet build`）；无需安装 Visual Studio |
+| IDE（可选） | 本机为 Visual Studio Community 2026（18.11.0）；VS 2022 / Rider 同样能打开 `.csproj` |
+| Revit API 引用 | 工程默认引用 `D:\revit\revit2023\Revit 2023\`（2023.1）的 DLL；装到 Revit 2020 前必须用 2020 的 API 重编（见"构建"），否则 Revit 2020 会拒绝加载 |
 
 ## 构建
 
@@ -31,11 +32,19 @@ dotnet build src/BimQc.Addin/BimQc.Addin.csproj -c Release `
   -p:RevitApiDir="D:\revit\revit2023\Revit 2023\"
 ```
 
+要装到 **Revit 2020**，必须改用 2020 的 API 目录重编：
+
+```powershell
+dotnet build src/BimQc.Addin/BimQc.Addin.csproj -c Release `
+  -p:RevitApiDir="D:\Program Files\Autodesk\Revit 2020\"
+```
+
 ## 安装
 
 1. 把 `BimQc.Addin.dll` 和仓库根目录的 `BimQc.addin` 复制到：
-   `%AppData%\Autodesk\Revit\Addins\2023\`
-2. 重启 Revit，在「附加模块 → 外部工具」里找到 **BIM 模型质检**。
+   `%AppData%\Autodesk\Revit\Addins\2020\`（本项目使用 Revit 2020）
+2. DLL 必须是用 Revit 2020 API 编译出来的（见"构建"）；用 2023 API 编出来的 DLL 放进 2020 会加载失败。
+3. 重启 Revit，在「附加模块 → 外部工具」里找到 **BIM 模型质检**。
 
 > `.addin` 与 `.dll` 必须在同一目录；Revit 只认这个固定路径，不能随便放。
 
