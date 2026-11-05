@@ -1,98 +1,93 @@
+> English | [中文](README.zh-CN.md)
+
 # revit-addin-toolkit
 
-一个用 C# 写的 Revit 模型质检插件：打开模型 → 一键扫描 → 导出可交给建模同事整改的 CSV 报告。
+A Revit model QC add-in written in C#: open a model → one-click scan → export a CSV report that can be handed to modeling colleagues for fixing.
 
-面向的是 BIM 建模/深化阶段最常见的四类低级错误——**重复标记、构件缺标高、必填参数缺失、房间未放置或未命名**。这些问题靠人眼翻模型要花半天，脚本跑一遍只要几秒。
+It targets the four most common low-level mistakes in BIM modeling and detailing—**duplicate marks, elements missing a level, missing required parameters, and unplaced or unnamed rooms**. Checking a model by eye takes half a day; one script run takes seconds.
 
-> 个人学习项目，MIT 许可。不含任何真实项目图纸、公司信息或内部路径。
+> Personal learning project, MIT licensed. Contains no real project drawings, company information, or internal paths.
 
-## 环境要求
+## Requirements
 
-| 项 | 版本（2026-11-05 本机实测） |
+| Item | Version (measured on this machine, 2026-11-05) |
 | --- | --- |
-| Revit | **2020（20.0.0.377）——本项目实际使用版本**；本机另装 2023.1（23.1.50.23），不用于本项目 |
-| .NET | .NET Framework 4.8.1（Release 533509），编译目标 `net48`（Revit 2020 要求 4.7.2+） |
-| 构建 | .NET SDK 10.0.203 / 10.0.402（`dotnet build`）；无需安装 Visual Studio |
-| IDE（可选） | 本机为 Visual Studio Community 2026（18.11.0）；VS 2022 / Rider 同样能打开 `.csproj` |
-| Revit API 引用 | 工程默认引用 `D:\revit\revit2023\Revit 2023\`（2023.1）的 DLL；装到 Revit 2020 前必须用 2020 的 API 重编（见"构建"），否则 Revit 2020 会拒绝加载 |
+| Revit | **2020 (20.0.0.377) — the version this project actually uses** |
+| .NET | .NET Framework 4.8.1 (Release 533509), compilation target `net48` (Revit 2020 requires 4.7.2+) |
+| Build | .NET SDK 10.0.203 / 10.0.402 (`dotnet build`); Visual Studio is not required |
+| IDE (optional) | Visual Studio Community 2026 (18.11.0) on this machine; VS 2022 / Rider can also open the `.csproj` |
+| Revit API reference | The project references the DLLs under `D:\Program Files\Autodesk\Revit 2020\` by default (RevitAPI.dll / RevitAPIUI.dll, `Private=false` so they are not packed); on another machine, change `RevitApiDir` in the csproj or override it with `-p:RevitApiDir=…` |
 
-## 构建
+## Build
 
 ```powershell
-# 仓库根目录
+# repository root
 dotnet build src/BimQc.Addin/BimQc.Addin.csproj -c Release
 ```
 
-产物：`bin/Release/BimQc.Addin.dll`。
+Output: `bin/Release/BimQc.Addin.dll`.
 
-Revit 安装路径不是默认值时，用属性覆盖：
-
-```powershell
-dotnet build src/BimQc.Addin/BimQc.Addin.csproj -c Release `
-  -p:RevitApiDir="D:\revit\revit2023\Revit 2023\"
-```
-
-要装到 **Revit 2020**，必须改用 2020 的 API 目录重编：
+If Revit is installed elsewhere, override the property (the default is already this machine's Revit 2020 path):
 
 ```powershell
 dotnet build src/BimQc.Addin/BimQc.Addin.csproj -c Release `
   -p:RevitApiDir="D:\Program Files\Autodesk\Revit 2020\"
 ```
 
-## 安装
+## Installation
 
-1. 把 `BimQc.Addin.dll` 和仓库根目录的 `BimQc.addin` 复制到：
-   `%AppData%\Autodesk\Revit\Addins\2020\`（本项目使用 Revit 2020）
-2. DLL 必须是用 Revit 2020 API 编译出来的（见"构建"）；用 2023 API 编出来的 DLL 放进 2020 会加载失败。
-3. 重启 Revit，在「附加模块 → 外部工具」里找到 **BIM 模型质检**。
+1. Copy `BimQc.Addin.dll` and `BimQc.addin` from the repository root into:
+   `%AppData%\Autodesk\Revit\Addins\2020\` (this project uses Revit 2020)
+2. The DLL must be compiled against the Revit 2020 API (this project does so by default); a DLL built against another major version's API will fail to load in 2020.
+3. Restart Revit and find **BIM 模型质检** (BIM Model QC) under "Add-Ins → External Tools".
 
-> `.addin` 与 `.dll` 必须在同一目录；Revit 只认这个固定路径，不能随便放。
+> The `.addin` and the `.dll` must be in the same directory; Revit only accepts this fixed path, so they cannot be placed arbitrarily.
 
-## 使用
+## Usage
 
-点击命令 → 弹出目录选择框 → 选一个输出目录 → 等几秒 → 弹窗给出汇总，同目录下生成 `模型质检_yyyyMMdd_HHmm.csv`。
+Click the command → a directory picker appears → choose an output directory → wait a few seconds → a dialog shows the summary, and `模型质检_yyyyMMdd_HHmm.csv` is written to the same directory (the file name prefix is Chinese for "model QC").
 
-报告列为：`类别, 构件ID, 族, 类型, 规则, 问题类型, 说明`。构件 ID 可以直接在 Revit 里「按 ID 选择」定位。
+The report columns are: `类别, 构件ID, 族, 类型, 规则, 问题类型, 说明` (Category, Element ID, Family, Type, Rule, Issue Type, Detail). An element ID can be located directly in Revit with "Select by ID".
 
-## 检查规则
+## Check rules
 
-| ID | 规则 | 判定 | 状态 |
+| ID | Rule | Criterion | Status |
 | --- | --- | --- | --- |
-| R1 | 重复标记 | 同一类别下多个构件共用同一个「标记」值；空标记不算 | ✅ |
-| R2 | 构件缺标高 | 构件无法取得所属标高（房间/轴网/注释类本来就无标高，已排除） | ✅ |
-| R3 | 必填参数缺失 | 区分「参数未定义」与「参数存在但为空」，默认检查 `标记`、`系统类型` | ✅ |
-| R4 | 房间未放置/未命名 | 面积 = 0 视为未放置；面积正常但名称为空视为未命名 | ✅ |
+| R1 | Duplicate marks | Multiple elements in the same category share one "Mark" value; an empty mark does not count | ✅ |
+| R2 | Element missing a level | The element has no resolvable level (rooms, grids, and annotations have no level by nature and are excluded) | ✅ |
+| R3 | Missing required parameters | Distinguishes "parameter not defined" from "parameter exists but is empty"; checks `标记` (Mark) and `系统类型` (System Type) by default | ✅ |
+| R4 | Unplaced/unnamed rooms | Area = 0 is treated as unplaced; a normal area with an empty name is treated as unnamed | ✅ |
 
-规则是纯只读的：整个命令以 `TransactionMode.ReadOnly` 运行，插件不会改动模型任何一个参数。
+The rules are strictly read-only: the whole command runs with `TransactionMode.ReadOnly`, and the add-in does not change a single parameter in the model.
 
-## 目录结构
+## Project layout
 
 ```
 revit-addin-toolkit/
-├─ BimQc.addin              # Revit 加载清单
+├─ BimQc.addin              # Revit add-in manifest
 ├─ src/BimQc.Addin/
-│  ├─ Command.cs            # 入口：采集 → 跑规则 → 导出 → 汇总
-│  ├─ Models/Issue.cs       # 一条问题记录
-│  ├─ Rules/                # 每条规则一个类，实现 ICheckRule
-│  ├─ RevitWrap/            # 对 Revit API 的薄封装（取参数文本、标高名等）
-│  └─ Reporting/            # CSV 报告输出
-└─ docs/设计说明.md          # 分层、扩展方式、已知限制
+│  ├─ Command.cs            # Entry point: collect → run rules → export → summarize
+│  ├─ Models/Issue.cs       # A single issue record
+│  ├─ Rules/                # One class per rule, implementing ICheckRule
+│  ├─ RevitWrap/            # Thin wrapper over the Revit API (parameter text, level names, etc.)
+│  └─ Reporting/            # CSV report output
+└─ docs/design-notes.md     # Layering, extension points, known limitations
 ```
 
-## 路线图
+## Roadmap
 
-- [x] v0.1 命令入口 + R1–R4 + CSV 报告
-- [ ] v0.2 WPF 面板：结果表格、双击定位构件、按规则筛选
-- [ ] v0.3 规则可配置（JSON 描述参数名与阈值），不再硬编码
-- [ ] v0.4 HTML 报告 + 按楼层/专业的汇总统计
-- [ ] v1.0 用真实脱敏模型跑通全流程，补 GIF 与截图
+- [x] v0.1 Command entry + R1–R4 + CSV report
+- [ ] v0.2 WPF panel: results table, double-click to locate an element, filter by rule
+- [ ] v0.3 Configurable rules (JSON describes parameter names and thresholds), no longer hard-coded
+- [ ] v0.4 HTML report + summary statistics by level/discipline
+- [ ] v1.0 Run the full workflow on a real anonymized model, add GIFs and screenshots
 
-## 已知限制
+## Known limitations
 
-- 只扫描当前文档，不处理链接模型与工作共享的本地副本差异。
-- R3 的参数名目前写在 `Command.cs` 里，改参数名要重新编译（v0.3 会外置成配置）。
-- 房间统计依赖 `Area` 参数，非面积型房间（如面积方案关闭）会全部报「未放置」。
+- Only the current document is scanned; linked models and local-copy differences in worksharing are not handled.
+- R3's parameter names are currently written in `Command.cs`, so changing a parameter name requires a rebuild (v0.3 will externalize them into configuration).
+- Room statistics rely on the `Area` parameter; non-area rooms (e.g. when the area scheme is off) will all be reported as "unplaced".
 
-## 许可
+## License
 
 [MIT](LICENSE)

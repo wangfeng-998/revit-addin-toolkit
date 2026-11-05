@@ -1,3 +1,5 @@
+> [English](design-notes.md) | 中文
+
 # 设计说明
 
 ## 为什么这样分层

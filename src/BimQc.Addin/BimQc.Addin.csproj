@@ -10,7 +10,7 @@
     <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
     <Platforms>AnyCPU</Platforms>
     <!-- Revit API 位置：换机器 / 换版本时改这里，或用 /p:RevitApiDir=... 覆盖 -->
-    <RevitApiDir Condition="'$(RevitApiDir)' == ''">D:\revit\revit2023\Revit 2023\</RevitApiDir>
+    <RevitApiDir Condition="'$(RevitApiDir)' == ''">D:\Program Files\Autodesk\Revit 2020\</RevitApiDir>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
 
